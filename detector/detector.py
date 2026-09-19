@@ -21,7 +21,8 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 WINDOW = 50  # per-user rolling window for amount stats
 Z_THRESHOLD = 3.0
 VELOCITY_WINDOW_SEC = 30
-VELOCITY_LIMIT = 8
+# ~25 tx/s across 40 users ≈ 19 tx/user/30s. Flag only a clear burst above that.
+VELOCITY_LIMIT = 30
 
 
 @dataclass
@@ -148,6 +149,9 @@ def main() -> None:
     consumer = wait_consumer(BOOTSTRAP)
     producer = wait_producer(BOOTSTRAP)
     users: dict[str, UserState] = defaultdict(UserState)
+    r.delete("feed:transactions", "feed:anomalies", "metrics:latency_ms")
+    r.set("metrics:tx_total", 0)
+    r.set("metrics:anomaly_total", 0)
 
     print(f"[detector] listening on {TX_TOPIC} → {ANOM_TOPIC}")
     processed = 0

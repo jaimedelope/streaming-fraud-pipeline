@@ -31,9 +31,15 @@ MERCHANTS = [
 COUNTRIES = ["US", "ES", "DE", "FR", "GB", "BR", "MX", "JP"]
 CHANNELS = ["card", "mobile", "web", "atm"]
 
-# Simulated user profiles with typical spend ranges
+# Simulated user profiles with typical spend ranges and a home country.
+# Legitimate traffic stays local so country_hop only fires on real jumps.
 USERS = [
-    {"user_id": f"user_{i:03d}", "avg": random.uniform(20, 120), "std": random.uniform(8, 35)}
+    {
+        "user_id": f"user_{i:03d}",
+        "avg": random.uniform(20, 120),
+        "std": random.uniform(8, 35),
+        "home_country": random.choices(COUNTRIES, weights=[40, 15, 10, 8, 8, 7, 6, 6])[0],
+    }
     for i in range(1, 41)
 ]
 
@@ -65,14 +71,20 @@ def make_transaction(inject_fraud: bool = False) -> dict:
     now = datetime.now(timezone.utc)
 
     if inject_fraud:
-        # Extreme amount, unusual country hop, high velocity signal
+        # Extreme amount + country hop away from the user's home
         amount = round(random.uniform(user["avg"] * 8, user["avg"] * 25), 2)
-        country = random.choice([c for c in COUNTRIES if c != "US"] or COUNTRIES)
+        away = [c for c in COUNTRIES if c != user["home_country"]] or COUNTRIES
+        country = random.choice(away)
         channel = "web"
         fraud_label = True
     else:
         amount = max(1.0, round(random.gauss(user["avg"], user["std"]), 2))
-        country = random.choices(COUNTRIES, weights=[40, 15, 10, 8, 8, 7, 6, 6])[0]
+        # ~3% of legit txns travel; the rest stay in the home country
+        if random.random() < 0.03:
+            away = [c for c in COUNTRIES if c != user["home_country"]] or COUNTRIES
+            country = random.choice(away)
+        else:
+            country = user["home_country"]
         channel = random.choice(CHANNELS)
         fraud_label = False
 
@@ -99,8 +111,8 @@ def main() -> None:
     print(f"[producer] publishing to topic={TOPIC} rate={RATE}/s")
 
     while True:
-        # ~3% of events are intentional fraud injections
-        inject = random.random() < 0.03
+        # ~10% of events are intentional fraud injections (keeps the live feed readable)
+        inject = random.random() < 0.10
         txn = make_transaction(inject_fraud=inject)
         producer.send(TOPIC, key=txn["user_id"], value=txn)
         sent += 1
