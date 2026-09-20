@@ -8,8 +8,6 @@ Designed to be easy to run locally with Docker and easy to explain in a case stu
 
 ## Architecture
 
-![Streaming fraud pipeline: producer, Redpanda, detector, Redis, and dashboard](docs/architecture.png)
-
 ```text
 ┌────────────┐   transactions   ┌──────────────┐   anomalies    ┌──────────┐
 │  Producer  │ ───────────────► │   Redpanda   │ ◄───────────── │ Detector │
@@ -28,6 +26,8 @@ Designed to be easy to run locally with Docker and easy to explain in a case stu
                                                               │  :8088      │
                                                               └─────────────┘
 ```
+
+![Streaming fraud pipeline: producer, Redpanda, detector, Redis, and dashboard](docs/architecture.png)
 
 ### What each piece does
 
