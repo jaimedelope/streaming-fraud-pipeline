@@ -10,6 +10,25 @@ Designed to be easy to run locally with Docker and easy to explain in a case stu
 
 ![Streaming fraud pipeline: producer, Redpanda, detector, Redis, and dashboard](docs/architecture.png)
 
+```text
+┌────────────┐   transactions   ┌──────────────┐   anomalies    ┌──────────┐
+│  Producer  │ ───────────────► │   Redpanda   │ ◄───────────── │ Detector │
+│ (Python)   │                  │ (Kafka API)  │ ─────────────► │ (Python) │
+└────────────┘                  └──────────────┘   consume tx   └────┬─────┘
+                                                                     │
+                                                              metrics + feeds
+                                                                     ▼
+                                                              ┌─────────────┐
+                                                              │    Redis    │
+                                                              └──────┬──────┘
+                                                                     │
+                                                                     ▼
+                                                              ┌─────────────┐
+                                                              │  Dashboard  │
+                                                              │  :8088      │
+                                                              └─────────────┘
+```
+
 ### What each piece does
 
 | Component | Role |
