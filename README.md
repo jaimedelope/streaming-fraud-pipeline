@@ -31,11 +31,11 @@ Designed to be easy to run locally with Docker and easy to explain in a case stu
 
 | Component | Role |
 |-----------|------|
-| **Producer** | Emits ~25 fake card transactions/sec (users, merchants, countries). ~3% are intentional fraud injections. |
-| **Redpanda** | Kafka-compatible broker (lighter than full Kafka for demos). |
-| **Detector** | Rolling per-user stats, z-score on amount, velocity rules, country hops. Publishes anomalies + latency. |
-| **Redis** | Shared live feeds + latency samples for the UI. |
-| **Dashboard** | FastAPI + simple UI with counters, p50/p95 latency, live tables. |
+| **Producer** | Emits ~25 fake card transactions/sec across 40 users (merchant, channel, home country). ~10% are intentional fraud injections (high amount + country hop). |
+| **Redpanda** | Kafka-compatible broker (lighter than full Kafka for demos). Topics: `transactions`, `anomalies`. |
+| **Detector** | Rolling per-user stats, z-score on amount, velocity, country hops. Publishes anomalies + latency. Does **not** read the producer’s `is_injected_fraud` label. |
+| **Redis** | Shared live feeds + latency samples for the UI (not a system of record). |
+| **Dashboard** | FastAPI UI on `:8088` with counters, anomaly rate, p50/p95/avg latency, live tables. |
 
 ## Quick start
 
@@ -59,14 +59,14 @@ docker compose down -v
 
 The detector scores each event with explainable rules (great for interviews):
 
-1. **Amount z-score** vs the user's rolling window (threshold ≈ 3σ)
-2. **Velocity** — too many txns in 30 seconds
-3. **Country hop** with elevated amount
+1. **Amount z-score** vs the user’s last 50 amounts (needs ≥10 samples; flag if ≥ 3σ)
+2. **Velocity** — ≥ 30 transactions in 30 seconds (above the ~19 tx/user expected at 25/s)
+3. **Country hop** with amount > 80 (legit traffic stays in the user’s home country; injected fraud jumps)
 4. **Absolute amount** spike (≥ 800)
 
-Events with score ≥ 2.5 are marked as anomalies.
+Events with score ≥ 2.5 are marked as anomalies. Injected fraud plus those rules land around a **~10%** anomaly rate on the dashboard.
 
-Latency is measured as `consumed_at_ms - produced_at_ms` (producer timestamp embedded in each event).
+Latency is `consumed_at_ms - produced_at_ms` (producer timestamp embedded in each event). The UI shows p50 / p95 / average of the recent samples.
 
 ## Project layout
 
