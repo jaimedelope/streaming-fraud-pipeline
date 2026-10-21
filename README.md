@@ -10,7 +10,7 @@ Designed to be easy to run locally with Docker and easy to explain in a case stu
 
 Try the dashboard in the browser: **[streaming-fraud-pipeline.vercel.app](https://streaming-fraud-pipeline.vercel.app)**
 
-That URL is a static Vercel demo: the same UI and scoring rules, with transactions generated in the browser (no Kafka/Redis). The Docker stack below is the real pipeline.
+That URL is a static Vercel demo: the same UI and scoring rules, with transactions generated in the browser (no Kafka/Redis). Git pushes to `master` redeploy only `web/`. The Docker stack below is the real pipeline.
 
 ## Architecture
 
