@@ -6,6 +6,12 @@ End-to-end **real-time demo** for a data engineering portfolio:
 
 Designed to be easy to run locally with Docker and easy to explain in a case study.
 
+## Live demo
+
+Try the dashboard in the browser: **[streaming-fraud-pipeline.vercel.app](https://streaming-fraud-pipeline.vercel.app)**
+
+That URL is a static Vercel demo: the same UI and scoring rules, with transactions generated in the browser (no Kafka/Redis). The Docker stack below is the real pipeline.
+
 ## Architecture
 
 ```text
@@ -75,9 +81,11 @@ Latency is `consumed_at_ms - produced_at_ms` (producer timestamp embedded in eac
 ```text
 producer/     # transaction generator
 detector/     # streaming consumer + scoring
-dashboard/    # FastAPI UI
+dashboard/    # FastAPI UI (Docker)
+web/          # static Vercel demo (client-side simulation)
 docs/         # case-study notes
 docker-compose.yml
+vercel.json
 ```
 
 ## Next ideas (for v2)
@@ -89,4 +97,4 @@ docker-compose.yml
 
 ## Portfolio note
 
-This repo is the **implementation**. The portfolio site will link here as the GitHub “Code” URL and host a case study page with screenshots + architecture narrative.
+This repo is the **implementation**. The Vercel URL is a lightweight live UI for recruiters; GitHub + Docker is the actual streaming stack.
