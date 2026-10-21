@@ -33,6 +33,11 @@ def index() -> FileResponse:
     return FileResponse(static_dir / "index.html")
 
 
+@app.get("/favicon.ico")
+def favicon() -> FileResponse:
+    return FileResponse(static_dir / "favicon.svg", media_type="image/svg+xml")
+
+
 @app.get("/api/health")
 def health() -> dict:
     try:
